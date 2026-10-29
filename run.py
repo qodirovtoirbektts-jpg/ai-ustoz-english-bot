@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Root runner for AI Ustoz English Telegram Bot."""
 import asyncio
 import os
