@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: ai-ustoz-english-bot
+    runtime: python
+    plan: free
+    region: frankfurt
+    buildCommand: pip install -r requirements.txt
+    startCommand: python run.py
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: DB_URL
+        value: sqlite+aiosqlite:///ai_ustoz.db
+      - key: DEFAULT_LANG
+        value: uz
+      - key: TIMEZONE
+        value: Asia/Tashkent
+      - key: DEFAULT_VOICE
+        value: en-US-AriaNeural
