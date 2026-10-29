@@ -2,9 +2,15 @@
 """Root runner for AI Ustoz English Telegram Bot."""
 import asyncio
 import os
+import sys
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from bot.main import main
+
+# Unbuffered output for real-time cloud logging
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(line_buffering=True)
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(line_buffering=True)
 
 
 def start_health_server() -> None:
@@ -28,9 +34,13 @@ def start_health_server() -> None:
         def log_message(self, format, *args):
             pass
 
-    server = HTTPServer(("0.0.0.0", port), HealthHandler)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
+    try:
+        server = HTTPServer(("0.0.0.0", port), HealthHandler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        print(f"Health server successfully started on port {port}")
+    except Exception as e:
+        print(f"Health server failed to start: {e}", file=sys.stderr)
 
 
 def start_keep_alive_pinger() -> None:
@@ -50,11 +60,24 @@ def start_keep_alive_pinger() -> None:
                     pass
             time.sleep(600)
 
-    thread = threading.Thread(target=ping_worker, daemon=True)
-    thread.start()
+    try:
+        thread = threading.Thread(target=ping_worker, daemon=True)
+        thread.start()
+    except Exception as e:
+        print(f"Keep-alive pinger error: {e}", file=sys.stderr)
 
 
 if __name__ == "__main__":
+    from bot.main import main
+
     start_health_server()
     start_keep_alive_pinger()
-    asyncio.run(main())
+
+    try:
+        asyncio.run(main())
+    except (KeyboardInterrupt, SystemExit):
+        print("Shutdown requested.")
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
